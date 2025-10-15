@@ -8,13 +8,22 @@ import { sampleContracts } from "@/lib/sample-contracts"
 
 const systemPrompt = `You are the Griphyn AI talent agent assistant. Help creators understand their deals, brand outreach, tasks, payments, and creative briefs.
 
-Always follow this Markdown structure when you reply:
-- Begin with a single concise summary sentence.
-- Insert a blank line.
-- Present supporting details as individual "-" bullet points, one per line, grouped logically. Maintain a blank line before the first bullet group and between separate groups.
-- End with a blank line followed by a short concluding sentence or recommendation.
+Respond in clear Markdown using this layout (omit a section only if you truly have no information for it):
 
-Keep answers grounded in the provided context. If information is missing, state that clearly instead of guessing.`
+## Summary
+- One sentence that captures the main takeaway in plain language.
+
+## Key Points
+- Each bullet should start with a bold label (for example **Deal**, **Status**, **Timing**, **Risk**) followed by a concise explanation on the same line.
+- Group related insights together and keep bullets short—prefer two sentences max.
+
+## Recommended Actions
+1. Provide prioritized next steps. Use numbered items. If there are no actions, write \`1. No immediate actions required.\`
+
+## Extra Context (optional)
+- Use this section for tables, callouts, or additional facts. Favor bullet lists with bold labels or small tables when you have multiple numeric values.
+
+Write in a warm, professional tone. If you cannot answer something, say so explicitly and suggest what would be needed to proceed.`
 
 type ChatMessage = {
   role: "user" | "assistant"
@@ -72,18 +81,17 @@ const buildSampleDealsSummary = () => {
   }
 
   const lines = fallbackDeals.map((deal) => {
-    const parts = [
-      `**${deal.deal}** (${deal.company})`,
-      `Status: ${deal.stage}`,
-      `Source: ${deal.source}`,
-      `Value: ${deal.amount}`,
+    const detailLines = [
+      `  - Status: ${deal.stage}`,
+      `  - Source: ${deal.source}`,
+      `  - Value: ${deal.amount}`,
     ]
 
     if (deal.goLiveDate) {
-      parts.push(`Go-live Date: ${deal.goLiveDate}`)
+      detailLines.push(`  - Go-live: ${deal.goLiveDate}`)
     }
 
-    return `- ${parts.join(" • ")}`
+    return [`- **${deal.deal}** (${deal.company})`, ...detailLines].join("\n")
   })
 
   return `## Deals (sample)\n${lines.join("\n")}`
@@ -131,15 +139,21 @@ const buildDealContext = async () => {
           const diffMs = dueDate.getTime() - now.getTime()
           const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24))
           const formattedDue = dueDate.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
-          dueText = diffDays >= 0 ? `Go-live Date: ${formattedDue} (${diffDays} days left)` : `Go-live Date: ${formattedDue} (overdue)`
+          dueText = diffDays >= 0 ? `  - Go-live: ${formattedDue} (${diffDays} days left)` : `  - Go-live: ${formattedDue} (overdue)`
         }
 
-        const parts = [`**${title}** (${brand})`, `Status: ${status}`, `Source: ${source}`, `Value: ${value}`, `Last Update: ${updated}`]
+        const detailLines = [
+          `  - Status: ${status}`,
+          `  - Source: ${source}`,
+          `  - Value: ${value}`,
+          `  - Last Update: ${updated}`,
+        ]
+
         if (dueText) {
-          parts.splice(4, 0, dueText)
+          detailLines.splice(3, 0, dueText)
         }
 
-        return `- ${parts.join(" • ")}`
+        return [`- **${title}** (${brand})`, ...detailLines].join("\n")
       })
 
       return `## Deals\n${lines.join("\n")}`
@@ -159,30 +173,28 @@ const buildPaymentContext = () => {
   }
 
   const payoutLines = upcomingPayouts.slice(0, 5).map((payout) => {
-    const parts = [
-      `**${payout.deal}** (${payout.company})`,
-      `Amount: ${payout.amount}`,
-      `Due Date: ${payout.dueDate}`,
-      `Status: ${payout.status}`,
-      `Milestone: ${payout.milestone}`,
+    const details = [
+      `  - Amount: ${payout.amount}`,
+      `  - Due Date: ${payout.dueDate}`,
+      `  - Status: ${payout.status}`,
+      `  - Milestone: ${payout.milestone}`,
     ]
-    return `- ${parts.join(" • ")}`
+    return [`- **${payout.deal}** (${payout.company})`, ...details].join("\n")
   })
 
   const invoiceHighlights = invoices
     .filter((invoice) => invoice.status === "Overdue" || invoice.status === "Pending")
     .map((invoice) => {
-      const parts = [
-        `**${invoice.deal}** (${invoice.company})`,
-        `Invoice: ${invoice.id}`,
-        `Amount: ${invoice.amount}`,
-        `Status: ${invoice.status}`,
-        `Issued: ${invoice.issueDate}`,
+      const details = [
+        `  - Invoice: ${invoice.id}`,
+        `  - Amount: ${invoice.amount}`,
+        `  - Status: ${invoice.status}`,
+        `  - Issued: ${invoice.issueDate}`,
       ]
       if (invoice.paidDate !== "—") {
-        parts.push(`Paid: ${invoice.paidDate}`)
+        details.push(`  - Paid: ${invoice.paidDate}`)
       }
-      return `- ${parts.join(" • ")}`
+      return [`- **${invoice.deal}** (${invoice.company})`, ...details].join("\n")
     })
 
   const escrowNotes = escrowTransactions.slice(0, 5).map((transaction) => {
@@ -190,15 +202,14 @@ const buildPaymentContext = () => {
     dueDate.setDate(dueDate.getDate() + transaction.paymentDueDays)
     const due = dueDate.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
 
-    const parts = [
-      `**${transaction.deal}** (${transaction.company})`,
-      `Amount: ${transaction.amount}`,
-      `Terms: ${transaction.paymentTerms}`,
-      `Payment Window: ${transaction.paymentDueDays} days`,
-      `Expected Payout: ${due}`,
+    const details = [
+      `  - Amount: ${transaction.amount}`,
+      `  - Terms: ${transaction.paymentTerms}`,
+      `  - Payment Window: ${transaction.paymentDueDays} days`,
+      `  - Expected Payout: ${due}`,
     ]
 
-    return `- ${parts.join(" • ")}`
+    return [`- **${transaction.deal}** (${transaction.company})`, ...details].join("\n")
   })
 
   const sections: string[] = []
@@ -223,21 +234,20 @@ const buildContractContext = () => {
     return null
   }
 
-  const lines = sampleContracts.slice(0, 5).map((contract) => {
-    const parts = [
-      `**${contract.deal}** (${contract.brand})`,
-      `Status: ${contract.status}`,
-      `Effective: ${contract.effectiveDate}`,
+  const lines = sampleContracts slice(0, 5).map((contract) => {
+    const details = [
+      `  - Status: ${contract.status}`,
+      `  - Effective: ${contract.effectiveDate}`,
     ]
 
     if (contract.renewalDate) {
-      parts.push(`Renewal: ${contract.renewalDate}`)
+      details.push(`  - Renewal: ${contract.renewalDate}`)
     }
 
-    parts.push(`Terms: ${contract.termsSummary}`)
-    parts.push(`Last Updated: ${contract.lastUpdated}`)
+    details.push(`  - Terms: ${contract.termsSummary}`)
+    details.push(`  - Last Updated: ${contract.lastUpdated}`)
 
-    return `- ${parts.join(" • ")}`
+    return [`- **${contract.deal}** (${contract.brand})`, ...details].join("\n")
   })
 
   return `## Contracts\n${lines.join("\n")}`
@@ -255,23 +265,21 @@ const buildCreativeBriefContext = () => {
       .join("; ")
     const talkingPoints = brief.talking_points.join(", ")
 
-    const parts = [
-      `**${deal.deal}** (${deal.company})`,
-      `Campaign: ${brief.campaign}`,
-      `Objective: ${brief.objective}`,
-      `Deliverables: ${deliverables}`,
-      `Timeline: ${brief.timeline}`,
-      `Guidelines: ${brief.brandGuidelines}`,
-      `Talking Points: ${talkingPoints}`,
-      `Hashtags: ${brief.hashtags}`,
+    const details = [
+      `  - Campaign: ${brief.campaign}`,
+      `  - Objective: ${brief.objective}`,
+      `  - Deliverables: ${deliverables}`,
+      `  - Timeline: ${brief.timeline}`,
+      `  - Guidelines: ${brief.brandGuidelines}`,
+      `  - Talking Points: ${talkingPoints}`,
+      `  - Hashtags: ${brief.hashtags}`,
     ]
 
-    return `- ${parts.join(" • ")}`
+    return [`- **${deal.deal}** (${deal.company})`, ...details].join("\n")
   })
 
   return `## Creative Briefs\n${lines.join("\n")}`
 }
-
 
 export async function POST(request: Request) {
   const client = buildClient()
