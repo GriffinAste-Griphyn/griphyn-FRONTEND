@@ -30,6 +30,8 @@ type ChatMessage = {
   content: string
 }
 
+const sentenceSplitRegex = /(?<=\.|\?|!)\s+/
+
 const buildClient = () => {
   const apiKey = process.env.OPENAI_API_KEY
 
@@ -281,6 +283,49 @@ const buildCreativeBriefContext = () => {
   return `## Creative Briefs\n${lines.join("\n")}`
 }
 
+const ensureStructuredReply = (raw: string) => {
+  const trimmed = raw.trim()
+  if (trimmed.toLowerCase().includes("## summary") && trimmed.toLowerCase().includes("## recommended actions")) {
+    return trimmed
+  }
+
+  const segments = trimmed.split(sentenceSplitRegex).filter((segment) => segment.trim().length > 0)
+  const summarySentence = segments.shift()?.trim() ?? "No summary available."
+  const remainder = segments.join(" ").trim()
+
+  const detailLines =
+    remainder.length > 0
+      ? remainder
+          .split(/\n+/)
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0)
+          .map((line) => `- **Detail**: ${line}`)
+      : []
+
+  if (detailLines.length === 0) {
+    detailLines.push("- **Detail**: See summary above.")
+  }
+
+  const extraContextLines =
+    remainder.length > 0
+      ? [`- Original response: ${remainder}`]
+      : ["- Original response contained no additional context."]
+
+  return [
+    "## Summary",
+    `- ${summarySentence}`,
+    "",
+    "## Key Points",
+    ...detailLines,
+    "",
+    "## Recommended Actions",
+    "1. No immediate actions required.",
+    "",
+    "## Extra Context",
+    ...extraContextLines,
+  ].join("\n")
+}
+
 export async function POST(request: Request) {
   const client = buildClient()
 
@@ -325,8 +370,9 @@ export async function POST(request: Request) {
     })
 
     const reply = response.choices?.[0]?.message?.content?.trim() ?? "I’m not sure how to respond to that."
+    const formattedReply = ensureStructuredReply(reply)
 
-    return NextResponse.json({ reply })
+    return NextResponse.json({ reply: formattedReply })
   } catch (error) {
     console.error("Assistant API error:", error)
     return NextResponse.json({ error: "Unable to get a response right now." }, { status: 500 })
