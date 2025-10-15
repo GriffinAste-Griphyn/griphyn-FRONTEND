@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { Fragment, type ReactNode, useEffect, useRef, useState } from "react"
 import { X, Send } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -17,6 +17,104 @@ const WELCOME_MESSAGE: ChatMessage = {
   id: "welcome",
   role: "assistant",
   content: "Hi! I’m your Griphyn assistant. Ask me about brand deals, outreach, tasks, or payments.",
+}
+
+const splitBoldSegments = (text: string) => {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g)
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={`bold-${index}`} className="font-semibold">
+          {part.slice(2, -2)}
+        </strong>
+      )
+    }
+    return <Fragment key={`text-${index}`}>{part}</Fragment>
+  })
+}
+
+const renderAssistantContent = (content: string) => {
+  const elements: ReactNode[] = []
+  let listState:
+    | {
+        type: "ul" | "ol"
+        items: ReactNode[][]
+      }
+    | null = null
+
+  const flushList = () => {
+    if (!listState) return
+    const ListTag = listState.type === "ul" ? "ul" : "ol"
+    elements.push(
+      <ListTag
+        key={`list-${elements.length}`}
+        className={`${listState.type === "ul" ? "list-disc" : "list-decimal"} pl-4 space-y-1`}
+      >
+        {listState.items.map((item, index) => (
+          <li key={`list-item-${index}`} className="leading-5">
+            {item}
+          </li>
+        ))}
+      </ListTag>,
+    )
+    listState = null
+  }
+
+  const lines = content.replace(/\r/g, "").split("\n")
+
+  lines.forEach((rawLine) => {
+    const line = rawLine.trim()
+    if (line.length === 0) {
+      flushList()
+      return
+    }
+
+    if (line.startsWith("## ")) {
+      flushList()
+      const heading = line.replace(/^##\s+/, "")
+      elements.push(
+        <h3 key={`heading-${heading}-${elements.length}`} className="text-sm font-semibold uppercase tracking-wide">
+          {heading}
+        </h3>,
+      )
+      return
+    }
+
+    if (/^\d+\.\s+/.test(line)) {
+      const text = line.replace(/^\d+\.\s+/, "")
+      if (!listState || listState.type !== "ol") {
+        flushList()
+        listState = { type: "ol", items: [] }
+      }
+      listState.items.push(splitBoldSegments(text))
+      return
+    }
+
+    if (line.startsWith("- ")) {
+      const text = line.slice(2)
+      if (!listState || listState.type !== "ul") {
+        flushList()
+        listState = { type: "ul", items: [] }
+      }
+      listState.items.push(splitBoldSegments(text))
+      return
+    }
+
+    flushList()
+    elements.push(
+      <p key={`paragraph-${elements.length}`} className="leading-6">
+        {splitBoldSegments(line)}
+      </p>,
+    )
+  })
+
+  flushList()
+
+  if (elements.length === 0) {
+    return <p className="leading-6">{content}</p>
+  }
+
+  return <div className="space-y-2 text-sm leading-6">{elements}</div>
 }
 
 export function AssistantPanel() {
@@ -118,10 +216,7 @@ export function AssistantPanel() {
 
       <div className="flex-1 p-4 overflow-y-auto space-y-4">
         {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-          >
+          <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
               className={`rounded-lg px-3 py-2 text-sm max-w-[80%] ${
                 msg.role === "user"
@@ -129,7 +224,7 @@ export function AssistantPanel() {
                   : "bg-muted text-foreground"
               }`}
             >
-              {msg.content}
+              {msg.role === "assistant" ? renderAssistantContent(msg.content) : msg.content}
             </div>
           </div>
         ))}
@@ -143,9 +238,7 @@ export function AssistantPanel() {
           </div>
         ) : null}
 
-        {error ? (
-          <p className="text-xs text-destructive/80">{error}</p>
-        ) : null}
+        {error ? <p className="text-xs text-destructive/80">{error}</p> : null}
 
         <div ref={endOfMessagesRef} />
       </div>

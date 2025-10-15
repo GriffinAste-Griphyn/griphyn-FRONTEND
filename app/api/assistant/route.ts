@@ -236,7 +236,7 @@ const buildContractContext = () => {
     return null
   }
 
-  const lines = sampleContracts slice(0, 5).map((contract) => {
+  const lines = sampleContracts.slice(0, 5).map((contract) => {
     const details = [
       `  - Status: ${contract.status}`,
       `  - Effective: ${contract.effectiveDate}`,
@@ -285,31 +285,46 @@ const buildCreativeBriefContext = () => {
 
 const ensureStructuredReply = (raw: string) => {
   const trimmed = raw.trim()
-  if (trimmed.toLowerCase().includes("## summary") && trimmed.toLowerCase().includes("## recommended actions")) {
+  const lower = trimmed.toLowerCase()
+  if (lower.includes("## summary") && lower.includes("## recommended actions")) {
     return trimmed
   }
 
-  const segments = trimmed.split(sentenceSplitRegex).filter((segment) => segment.trim().length > 0)
-  const summarySentence = segments.shift()?.trim() ?? "No summary available."
+  const segments = trimmed.split(sentenceSplitRegex).map((segment) => segment.trim()).filter(Boolean)
+  const summarySentence = segments.shift() ?? "No summary available."
   const remainder = segments.join(" ").trim()
 
+  const normalizedRemainder = remainder
+    .replace(/\s*[-•]\s*(?=\*\*)/g, "\n- ")
+    .replace(/\s*[-•]\s+/g, "\n- ")
+    .replace(/\s+/g, " ")
+    .trim()
+
   const detailLines =
-    remainder.length > 0
-      ? remainder
+    normalizedRemainder.length > 0
+      ? normalizedRemainder
           .split(/\n+/)
-          .map((line) => line.trim())
+          .map((line) => line.replace(/^[-•]\s*/, "").trim())
           .filter((line) => line.length > 0)
-          .map((line) => `- **Detail**: ${line}`)
-      : []
+          .map((line) => {
+            const labeledMatch = line.match(/^\*\*(.+?)\*\*\s*:?.*$/)
+            if (labeledMatch) {
+              const label = labeledMatch[1].trim()
+              const value = line.replace(/^\*\*(.+?)\*\*\s*:?\s*/, "").trim() || "Not specified."
+              return `- **${label}**: ${value}`
+            }
+            return `- **Detail**: ${line}`
+          })
+      : ["- **Detail**: See summary above."]
 
-  if (detailLines.length === 0) {
-    detailLines.push("- **Detail**: See summary above.")
-  }
+  const actionCandidates = segments.filter((sentence) => /(make|prepare|plan|schedule|review|confirm|consider|ensure)/i.test(sentence))
+  const recommendedActions = actionCandidates.length
+    ? actionCandidates.slice(0, 3).map((sentence, index) => `${index + 1}. ${sentence}`)
+    : ["1. No immediate actions required."]
 
-  const extraContextLines =
-    remainder.length > 0
-      ? [`- Original response: ${remainder}`]
-      : ["- Original response contained no additional context."]
+  const extraContextLines = normalizedRemainder.length
+    ? [`- Original response: ${normalizedRemainder}`]
+    : ["- Original response contained no additional context."]
 
   return [
     "## Summary",
@@ -319,7 +334,7 @@ const ensureStructuredReply = (raw: string) => {
     ...detailLines,
     "",
     "## Recommended Actions",
-    "1. No immediate actions required.",
+    ...recommendedActions,
     "",
     "## Extra Context",
     ...extraContextLines,
