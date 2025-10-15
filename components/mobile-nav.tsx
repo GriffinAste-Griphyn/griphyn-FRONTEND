@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { SignOutButton } from "@clerk/nextjs"
 import {
   MenuIcon,
   HomeIcon,
@@ -53,12 +54,6 @@ export function MobileNav() {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
 
-  const handleLogout = () => {
-    // TODO: Implement actual logout logic (e.g., Supabase auth signout)
-    console.log("Logout clicked")
-    setOpen(false)
-  }
-
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -94,13 +89,12 @@ export function MobileNav() {
           </nav>
 
           <div className="p-4 border-t border-border">
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors w-full text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              <LogOutIcon className="h-5 w-5 flex-shrink-0" />
-              Logout
-            </button>
+            <SignOutButton signOutCallback={() => setOpen(false)} redirectUrl="/">
+              <button className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors w-full text-muted-foreground hover:bg-muted hover:text-foreground">
+                <LogOutIcon className="h-5 w-5 flex-shrink-0" />
+                Logout
+              </button>
+            </SignOutButton>
           </div>
         </div>
       </SheetContent>
