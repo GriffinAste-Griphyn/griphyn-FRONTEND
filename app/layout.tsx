@@ -1,11 +1,12 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
+import { ClerkProvider, SignedIn, SignedOut, SignIn } from "@clerk/nextjs"
+import { Suspense } from "react"
 import "./globals.css"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { Sidebar } from "@/components/sidebar"
 import { AssistantPanel } from "@/components/assistant-panel"
-import { Suspense } from "react"
 import { LoadingSpinner } from "@/components/loading-spinner"
 import AppProviders from "@/components/app-providers"
 
@@ -27,30 +28,40 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className="font-sans">
-        <Suspense
-          fallback={
-            <div className="flex min-h-screen w-full items-center justify-center">
-              <LoadingSpinner />
+    <ClerkProvider>
+      <html lang="en" className={inter.variable}>
+        <body className="font-sans">
+          <SignedIn>
+            <Suspense
+              fallback={
+                <div className="flex min-h-screen w-full items-center justify-center">
+                  <LoadingSpinner />
+                </div>
+              }
+            >
+              <div className="min-h-screen bg-background">
+                <DashboardHeader />
+
+                <div className="flex">
+                  <Sidebar />
+
+                  <main className="flex-1 px-4 md:px-6 py-6 md:py-8 w-full">
+                    <AppProviders>{children}</AppProviders>
+                  </main>
+                </div>
+
+                <AssistantPanel />
+              </div>
+            </Suspense>
+          </SignedIn>
+
+          <SignedOut>
+            <div className="flex min-h-screen items-center justify-center bg-background px-4">
+              <SignIn routing="hash" />
             </div>
-          }
-        >
-          <div className="min-h-screen bg-background">
-            <DashboardHeader />
-
-            <div className="flex">
-              <Sidebar />
-
-              <main className="flex-1 px-4 md:px-6 py-6 md:py-8 w-full">
-                <AppProviders>{children}</AppProviders>
-              </main>
-            </div>
-
-            <AssistantPanel />
-          </div>
-        </Suspense>
-      </body>
-    </html>
+          </SignedOut>
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }
