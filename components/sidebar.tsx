@@ -70,10 +70,15 @@ export function Sidebar() {
 
         <div className="p-4 border-t border-border">
           <SignOutButton afterSignOutUrl="/">
-            <button className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors w-full text-muted-foreground hover:bg-muted hover:text-foreground">
-              <LogOutIcon className="h-5 w-5 flex-shrink-0" />
-              Logout
-            </button>
+            {(props) => (
+              <button
+                {...props}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors w-full text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <LogOutIcon className="h-5 w-5 flex-shrink-0" />
+                Logout
+              </button>
+            )}
           </SignOutButton>
         </div>
       </div>
