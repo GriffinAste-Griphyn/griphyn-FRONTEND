@@ -2,8 +2,16 @@ import { NextRequest, NextResponse } from "next/server"
 
 const DEFAULT_BASE_URL = "http://localhost:4000"
 
+const resolveBaseUrl = () => {
+  return (
+    process.env.DEALS_API_BASE_URL ??
+    process.env.NEXT_PUBLIC_API_URL ??
+    DEFAULT_BASE_URL
+  )
+}
+
 const buildTargetUrl = (request: NextRequest) => {
-  const baseUrl = process.env.DEALS_API_BASE_URL ?? DEFAULT_BASE_URL
+  const baseUrl = resolveBaseUrl()
   const target = new URL("/api/deals", baseUrl)
   const requestUrl = new URL(request.url)
 
