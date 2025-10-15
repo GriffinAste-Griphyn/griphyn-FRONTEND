@@ -1,7 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { MobileNav } from "@/components/mobile-nav"
-import { UserButton } from "@clerk/nextjs"
+import { SignedIn, UserButton } from "@clerk/nextjs"
 
 export function DashboardHeader() {
   return (
@@ -13,9 +13,11 @@ export function DashboardHeader() {
           </Link>
           <div className="flex items-center gap-4">
             <MobileNav />
-            <div className="hidden md:block">
-              <UserButton afterSignOutUrl="/" />
-            </div>
+            <SignedIn>
+              <div className="hidden md:block">
+                <UserButton afterSignOutUrl="/" />
+              </div>
+            </SignedIn>
           </div>
         </div>
       </div>
