@@ -92,6 +92,7 @@ export function MobileNav() {
             <SignOutButton afterSignOutUrl="/">
               {(props) => (
                 <button
+                  type="button"
                   {...props}
                   onClick={(event) => {
                     props.onClick?.(event)

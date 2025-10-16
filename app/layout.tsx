@@ -70,12 +70,12 @@ export default function RootLayout({
                 </div>
 
                 <div className="flex flex-col items-center gap-3 sm:flex-row">
-                  <SignUpButton mode="modal">
+                  <SignUpButton mode="modal" redirectUrl="/">
                     <button className="rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90">
                       Get started
                     </button>
                   </SignUpButton>
-                  <SignInButton mode="modal">
+                  <SignInButton mode="modal" redirectUrl="/">
                     <button className="rounded-full border border-border px-6 py-2 text-sm font-semibold text-foreground transition hover:bg-muted">
                       I already have an account
                     </button>
@@ -83,7 +83,7 @@ export default function RootLayout({
                 </div>
 
                 <div className="w-full max-w-sm rounded-2xl border border-border bg-card/80 p-6 shadow-lg backdrop-blur">
-                  <SignIn routing="hash" />
+                  <SignIn routing="hash" afterSignInUrl="/" afterSignUpUrl="/" />
                 </div>
               </div>
             </div>

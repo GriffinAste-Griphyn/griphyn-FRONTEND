@@ -72,6 +72,7 @@ export function Sidebar() {
           <SignOutButton afterSignOutUrl="/">
             {(props) => (
               <button
+                type="button"
                 {...props}
                 className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors w-full text-muted-foreground hover:bg-muted hover:text-foreground"
               >
