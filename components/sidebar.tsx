@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { SignOutButton } from "@clerk/nextjs"
+import { useClerk } from "@clerk/nextjs"
 import { HomeIcon, LayoutGridIcon, CreditCardIcon, SettingsIcon, SendIcon, LogOutIcon, CalendarIcon } from "@/components/icons"
 import { cn } from "@/lib/utils"
 
@@ -41,6 +41,7 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const { signOut } = useClerk()
 
   return (
     <aside className="hidden md:flex w-64 flex-shrink-0 min-h-screen bg-card border-r border-border">
@@ -69,18 +70,14 @@ export function Sidebar() {
         </nav>
 
         <div className="p-4 border-t border-border">
-          <SignOutButton afterSignOutUrl="/">
-            {(props) => (
-              <button
-                type="button"
-                {...props}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors w-full text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                <LogOutIcon className="h-5 w-5 flex-shrink-0" />
-                Logout
-              </button>
-            )}
-          </SignOutButton>
+          <button
+            type="button"
+            onClick={() => signOut({ redirectUrl: "/" })}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors w-full text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <LogOutIcon className="h-5 w-5 flex-shrink-0" />
+            Logout
+          </button>
         </div>
       </div>
     </aside>
