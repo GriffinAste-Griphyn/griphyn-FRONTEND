@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { SignedIn, SignedOut } from "@clerk/nextjs"
 import Link from "next/link"
 import { Card } from "@/components/ui/card"
