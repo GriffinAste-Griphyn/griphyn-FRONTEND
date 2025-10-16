@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useClerk } from "@clerk/nextjs"
+import { SignOutButton } from "@clerk/nextjs"
 import {
   MenuIcon,
   HomeIcon,
@@ -53,7 +53,6 @@ const navItems = [
 export function MobileNav() {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
-  const { signOut } = useClerk()
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -90,17 +89,15 @@ export function MobileNav() {
           </nav>
 
           <div className="p-4 border-t border-border">
-            <button
-              type="button"
-              onClick={async () => {
-                await signOut({ redirectUrl: "/" })
-                setOpen(false)
-              }}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors w-full text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              <LogOutIcon className="h-5 w-5 flex-shrink-0" />
-              Logout
-            </button>
+            <SignOutButton redirectUrl="/" signOutCallback={() => setOpen(false)}>
+              <button
+                type="button"
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors w-full text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <LogOutIcon className="h-5 w-5 flex-shrink-0" />
+                Logout
+              </button>
+            </SignOutButton>
           </div>
         </div>
       </SheetContent>

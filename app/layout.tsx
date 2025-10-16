@@ -1,8 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import { ClerkProvider, SignedIn, SignedOut, SignInButton, SignUpButton } from "@clerk/nextjs"
-import { SignIn } from "@clerk/nextjs"
+import { ClerkProvider, SignedIn, SignedOut } from "@clerk/nextjs"
 import { Suspense } from "react"
 import "./globals.css"
 import { DashboardHeader } from "@/components/dashboard-header"
@@ -57,36 +56,7 @@ export default function RootLayout({
           </SignedIn>
 
           <SignedOut>
-            <div className="min-h-screen bg-background text-foreground">
-              <div className="mx-auto flex min-h-screen max-w-4xl flex-col items-center justify-center gap-10 px-6 py-12 text-center">
-                <div className="space-y-4">
-                  <p className="inline-flex items-center rounded-full bg-primary/10 px-4 py-1 text-sm font-medium text-primary">
-                    Meet your AI talent agent
-                  </p>
-                  <h1 className="text-4xl font-semibold md:text-5xl">Grow brand deals with Griphyn</h1>
-                  <p className="text-base text-muted-foreground md:text-lg">
-                    Sign in to manage your pipeline, automate outreach, and keep every deliverable on track.
-                  </p>
-                </div>
-
-                <div className="flex flex-col items-center gap-3 sm:flex-row">
-                  <SignUpButton mode="modal" redirectUrl="/">
-                    <button className="rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90">
-                      Get started
-                    </button>
-                  </SignUpButton>
-                  <SignInButton mode="modal" redirectUrl="/">
-                    <button className="rounded-full border border-border px-6 py-2 text-sm font-semibold text-foreground transition hover:bg-muted">
-                      I already have an account
-                    </button>
-                  </SignInButton>
-                </div>
-
-                <div className="w-full max-w-sm rounded-2xl border border-border bg-card/80 p-6 shadow-lg backdrop-blur">
-                  <SignIn routing="hash" afterSignInUrl="/" afterSignUpUrl="/" />
-                </div>
-              </div>
-            </div>
+            <main className="min-h-screen bg-background text-foreground">{children}</main>
           </SignedOut>
         </body>
       </html>
